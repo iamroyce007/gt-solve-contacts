@@ -466,33 +466,52 @@
     "END:VCARD"
   ].join("\n");
 
-  function openVcard(vcardContent, filename) {
-    const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
+  function openVcard(vcardContent, filename, contactObj) {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     
-    // Check if the user is on mobile (iOS or Android)
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // Direct navigation triggers the native Contacts app import preview on mobile
-      window.location.href = url;
+    if (isAndroid && contactObj) {
+      // Build Android Intent to open Contacts App directly to "Create New Contact"
+      const name = encodeURIComponent(contactObj.name || '');
+      const phone = encodeURIComponent(contactObj.phone || '');
+      const email = encodeURIComponent(contactObj.email || '');
+      const company = encodeURIComponent(contactObj.company || '');
+      const title = encodeURIComponent(contactObj.title || '');
+      
+      let intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/contact;S.name=${name};S.phone=${phone};S.email=${email};S.company=${company};S.job_title=${title};end`;
+      
+      window.location.href = intentUrl;
     } else {
-      // Desktop: trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      
+      if (isIOS) {
+        // Direct navigation triggers the native Contacts app import preview on iOS Safari
+        window.location.href = url;
+      } else {
+        // Desktop / fallback: trigger download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 60000);
     }
-    
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 60000);
   }
 
   document.getElementById('saveBtn').addEventListener('click', () => {
-    openVcard(vcard, "Durairasa_Matheeswaran_GTSolve.vcf");
+    openVcard(vcard, "Durairasa_Matheeswaran_GTSolve.vcf", {
+      name: "Durairasa Matheeswaran",
+      phone: "+91 99628 78786",
+      email: "durai@globaltechsolve.com",
+      company: "GT Solve",
+      title: "Founder & CEO"
+    });
   });
 
   // ---------- QR Code (self-referencing) ----------
@@ -644,7 +663,13 @@
       ].filter(line => line !== "").join("\n");
 
       // Download or redirect to visitor's vCard
-      openVcard(visitorVcard, `${name.replace(/\s+/g, '_')}_contact.vcf`);
+      openVcard(visitorVcard, `${name.replace(/\s+/g, '_')}_contact.vcf`, {
+        name: name,
+        phone: phone,
+        email: email,
+        company: company,
+        title: ""
+      });
 
       formState.style.display = 'none';
       successState.classList.add('show');
