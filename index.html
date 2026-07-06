@@ -335,15 +335,15 @@
 
     <div class="card-right">
       <div class="name-block">
-        <h1>Durairasa<span>Matheeswaran</span></h1>
-        <div class="role">Founder &amp; CEO</div>
+        <h1 id="personName">Durairasa<span>Matheeswaran</span></h1>
+        <div class="role" id="personTitle">Founder &amp; CEO</div>
         <hr class="rule"/>
       </div>
 
       <div class="info-list">
         <div class="info-row tel-row">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
-          <div class="tel-links">
+          <div class="tel-links" id="telLinksContainer">
             <a href="tel:+919962878786">+91 99628 78786</a>
             <span class="sep">|</span>
             <a href="tel:+919894254405">+91 98942 54405</a>
@@ -351,7 +351,7 @@
         </div>
         <div class="info-row">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div>
-          <a href="mailto:durai@globaltechsolve.com">durai@globaltechsolve.com</a>
+          <a href="mailto:durai@globaltechsolve.com" id="personEmail">durai@globaltechsolve.com</a>
         </div>
         <div class="info-row">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/></svg></div>
@@ -413,7 +413,7 @@
 
     <div id="formState">
       <h2>Share your contact</h2>
-      <p class="sub">Send your details to Durai's address book.</p>
+      <p class="sub">Send your details to <span id="modalOwnerNameSub">Durai</span>'s address book.</p>
 
       <!-- iOS Share Helper -->
       <div id="iosShareNote" style="display: none; margin-bottom: 14px; font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; padding: 10px; background: rgba(10,31,61,0.04); border-radius: 10px; border-left: 3px solid var(--orange);">
@@ -462,27 +462,172 @@
     <div class="success-state" id="successState">
       <div class="success-tick"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
       <h3>Sent!</h3>
-      <p>Your contact has been added to Durai's address book.</p>
+      <p>Your contact has been added to <span id="modalOwnerName">Durai</span>'s address book.</p>
     </div>
   </div>
 </div>
 
 <script>
-  // ---------- vCard / Save Contact ----------
-  const vcard = [
-    "BEGIN:VCARD",
-    "VERSION:3.0",
-    "N:Matheeswaran;Durairasa;;;",
-    "FN:Durairasa Matheeswaran",
-    "ORG:GT Solve",
-    "TITLE:Founder & CEO",
-    "TEL;TYPE=CELL:+919962878786",
-    "TEL;TYPE=CELL:+919894254405",
-    "EMAIL:durai@globaltechsolve.com",
-    "URL:https://www.globaltechsolve.com",
-    "ADR;TYPE=WORK:;;;Chennai;;;India;",
-    "END:VCARD"
-  ].join("\n");
+  // ---------- Team Member Configuration Database ----------
+  const TEAM = {
+    durai: {
+      id: "durai",
+      shortName: "Durai",
+      name: "Durairasa Matheeswaran",
+      title: "Founder & CEO",
+      phones: ["+91 99628 78786", "+91 98942 54405"],
+      email: "durai@globaltechsolve.com",
+      company: "GT Solve",
+      vcardName: "Matheeswaran;Durairasa;;;"
+    },
+    kassim: {
+      id: "kassim",
+      shortName: "Kassim",
+      name: "Kassim Jamal",
+      title: "Co-founder & COO",
+      phones: ["+91 98408 41721"],
+      email: "kassim@globaltechsolve.com",
+      company: "GT Solve",
+      vcardName: "Jamal;Kassim;;;"
+    },
+    suganya: {
+      id: "suganya",
+      shortName: "Suganya",
+      name: "Suganya Nandagopal",
+      title: "Co-founder & CPO",
+      phones: ["+91 99628 80100"],
+      email: "suganya@globaltechsolve.com",
+      company: "GT Solve",
+      vcardName: "Nandagopal;Suganya;;;"
+    },
+    chandra: {
+      id: "chandra",
+      shortName: "Chandra",
+      name: "Chandra Prasad TVRG",
+      title: "Founding Member & Dir. Eng. Services",
+      phones: ["+91 80157 33606"],
+      email: "chandra.prasad@globaltechsolve.com",
+      company: "GT Solve",
+      vcardName: "TVRG;Chandra Prasad;;;"
+    },
+    vinitha: {
+      id: "vinitha",
+      shortName: "Vinitha",
+      name: "Vinitha Goli",
+      title: "Manager Growth & Strategic Initiatives",
+      phones: ["+91 86399 88380"],
+      email: "vinitha.goli@globaltechsolve.com",
+      company: "GT Solve",
+      vcardName: "Goli;Vinitha;;;"
+    }
+  };
+
+  // Get active person from URL parameters (?p=username)
+  const urlParams = new URLSearchParams(window.location.search);
+  let pParam = urlParams.get('p');
+  if (pParam) pParam = pParam.toLowerCase();
+  const activePerson = TEAM[pParam] || TEAM.durai;
+
+  // Bind active person details to the UI dynamically
+  document.title = `${activePerson.name} — GT Solve`;
+  
+  // Format name with span for last word
+  const nameParts = activePerson.name.split(' ');
+  let nameHtml = activePerson.name;
+  if (nameParts.length > 1) {
+    const lastWord = nameParts[nameParts.length - 1];
+    const firstPart = nameParts.slice(0, -1).join(' ');
+    nameHtml = `${firstPart}<span>${lastWord}</span>`;
+  }
+  document.getElementById('personName').innerHTML = nameHtml;
+  document.getElementById('personTitle').textContent = activePerson.title;
+  
+  // Render phone numbers
+  const telContainer = document.getElementById('telLinksContainer');
+  telContainer.innerHTML = activePerson.phones.map(phone => `
+    <a href="tel:${phone.replace(/\s+/g, '')}">${escapeHtml(phone)}</a>
+  `).join('<span class="sep">|</span>');
+  
+  // Render email
+  const emailAnchor = document.getElementById('personEmail');
+  emailAnchor.href = `mailto:${activePerson.email}`;
+  emailAnchor.textContent = activePerson.email;
+
+  // Update share modal labels
+  document.getElementById('modalOwnerNameSub').textContent = activePerson.shortName;
+  document.getElementById('modalOwnerName').textContent = activePerson.shortName;
+
+  // ---------- Cloud Database Configuration (kvdb.io) ----------
+  // Dedicated verified bucket for GT Solve. Please verify the registration at durai@globaltechsolve.com to enable!
+  const BUCKET_ID = "KnHug3Mw37JUwzz9JRbmLL";
+  const KV_URL = `https://kvdb.io/${BUCKET_ID}/`;
+
+  async function getCloudKeys(prefix) {
+    try {
+      const response = await fetch(`${KV_URL}?prefix=${encodeURIComponent(prefix)}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch(e) {
+      console.warn("Cloud read failed, using local storage fallback:", e);
+      return null;
+    }
+  }
+
+  async function getCloudValue(key) {
+    try {
+      const response = await fetch(`${KV_URL}${key}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch(e) {
+      return null;
+    }
+  }
+
+  async function saveToCloud(key, value) {
+    try {
+      const response = await fetch(`${KV_URL}${key}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value)
+      });
+      return response.ok;
+    } catch(e) {
+      console.warn("Failed to save to cloud:", e);
+      return false;
+    }
+  }
+
+  async function deleteFromCloud(key) {
+    try {
+      const response = await fetch(`${KV_URL}${key}`, {
+        method: 'DELETE'
+      });
+      return response.ok;
+    } catch(e) {
+      console.warn("Failed to delete from cloud:", e);
+      return false;
+    }
+  }
+
+  // ---------- Dynamic vCard Generator ----------
+  function getActivePersonVcard(person) {
+    const lines = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `N:${person.vcardName}`,
+      `FN:${person.name}`,
+      `ORG:${person.company}`,
+      `TITLE:${person.title}`,
+      `EMAIL:${person.email}`,
+      `URL:https://www.globaltechsolve.com`,
+      `ADR;TYPE=WORK:;;;Chennai;;;India;`
+    ];
+    person.phones.forEach(p => {
+      lines.push(`TEL;TYPE=CELL:${p.replace(/\s+/g, '')}`);
+    });
+    lines.push("END:VCARD");
+    return lines.join("\n");
+  }
 
   function openVcard(vcardContent, filename, contactObj) {
     const isAndroid = /Android/i.test(navigator.userAgent);
@@ -517,10 +662,8 @@
       const url = URL.createObjectURL(blob);
       
       if (isIOS) {
-        // Direct navigation triggers the native Contacts app import preview on iOS Safari
         window.location.href = url;
       } else {
-        // Desktop / fallback: trigger download
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
@@ -536,13 +679,8 @@
   }
 
   document.getElementById('saveBtn').addEventListener('click', () => {
-    openVcard(vcard, "Durairasa_Matheeswaran_GTSolve.vcf", {
-      name: "Durairasa Matheeswaran",
-      phone: "+91 99628 78786",
-      email: "durai@globaltechsolve.com",
-      company: "GT Solve",
-      title: "Founder & CEO"
-    });
+    const personVcard = getActivePersonVcard(activePerson);
+    openVcard(personVcard, `${activePerson.name.replace(/\s+/g, '_')}_GTSolve.vcf`, activePerson);
   });
 
   // ---------- QR Code (self-referencing) ----------
@@ -597,18 +735,12 @@
           }
           
           const entry = { name, phone, email, company, ts: Date.now() };
-          const key = `contacts:${entry.ts}_${Math.random().toString(36).slice(2,8)}`;
+          const key = `contacts:${activePerson.id}:${entry.ts}_${Math.random().toString(36).slice(2,8)}`;
           
-          let stored = false;
-          if (window.storage && typeof window.storage.set === 'function') {
-            try {
-              await window.storage.set(key, JSON.stringify(entry), true);
-              stored = true;
-            } catch(e) { console.error(e); }
-          }
+          // Save to Cloud and local fallback
+          await saveToCloud(key, entry);
           try {
             localStorage.setItem(key, JSON.stringify(entry));
-            stored = true;
           } catch(e) { console.error(e); }
           
           overlay.classList.add('open');
@@ -733,63 +865,42 @@
     }
 
     const entry = { name, phone, email, company, ts: Date.now() };
-    const key = `contacts:${entry.ts}_${Math.random().toString(36).slice(2,8)}`;
+    const key = `contacts:${activePerson.id}:${entry.ts}_${Math.random().toString(36).slice(2,8)}`;
 
-    try{
-      let stored = false;
-      if (window.storage && typeof window.storage.set === 'function') {
-        try {
-          const result = await window.storage.set(key, JSON.stringify(entry), true);
-          if (result) stored = true;
-        } catch(e) {
-          console.error("window.storage.set failed:", e);
-        }
-      }
-      
-      // Fallback/parallel store to localStorage
-      try {
-        localStorage.setItem(key, JSON.stringify(entry));
-        stored = true;
-      } catch(e) {
-        console.error("localStorage set failed:", e);
-      }
+    // Save to Cloud and local fallback
+    await saveToCloud(key, entry);
+    try {
+      localStorage.setItem(key, JSON.stringify(entry));
+    } catch(e) { console.error(e); }
 
-      if (!stored) {
-        throw new Error("No storage mechanism available");
-      }
+    // Generate visitor's vCard
+    const nameParts = name.split(' ');
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : name;
+    
+    const visitorVcard = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `N:${lastName};${firstName};;;`,
+      `FN:${name}`,
+      company ? `ORG:${company}` : "",
+      `TEL;TYPE=CELL:${phone}`,
+      email ? `EMAIL:${email}` : "",
+      "END:VCARD"
+    ].filter(line => line !== "").join("\n");
 
-      // Generate visitor's vCard
-      const nameParts = name.split(' ');
-      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : name;
-      
-      const visitorVcard = [
-        "BEGIN:VCARD",
-        "VERSION:3.0",
-        `N:${lastName};${firstName};;;`,
-        `FN:${name}`,
-        company ? `ORG:${company}` : "",
-        `TEL;TYPE=CELL:${phone}`,
-        email ? `EMAIL:${email}` : "",
-        "END:VCARD"
-      ].filter(line => line !== "").join("\n");
+    // Download or redirect to visitor's vCard
+    openVcard(visitorVcard, `${name.replace(/\s+/g, '_')}_contact.vcf`, {
+      name: name,
+      phone: phone,
+      email: email,
+      company: company,
+      title: ""
+    });
 
-      // Download or redirect to visitor's vCard
-      openVcard(visitorVcard, `${name.replace(/\s+/g, '_')}_contact.vcf`, {
-        name: name,
-        phone: phone,
-        email: email,
-        company: company,
-        title: ""
-      });
-
-      formState.style.display = 'none';
-      successState.classList.add('show');
-      setTimeout(closeModal, 1800);
-    }catch(err){
-      console.error("Storage error:", err);
-      alert("Couldn't save your contact right now. Please try again in a moment.");
-    }
+    formState.style.display = 'none';
+    successState.classList.add('show');
+    setTimeout(closeModal, 1800);
   });
 
   // ---------- Address Book ----------
@@ -810,27 +921,21 @@
   async function loadContacts(){
     bookList.innerHTML = '<p class="empty-note">Loading…</p>';
     try{
+      const prefix = `contacts:${activePerson.id}:`;
       let keys = [];
-      let fromStorage = false;
+      let fromCloud = false;
       
-      if (window.storage && typeof window.storage.list === 'function') {
-        try {
-          const listResult = await window.storage.list('contacts:', true);
-          keys = (listResult && listResult.keys) ? listResult.keys : [];
-          if (keys.length > 0) fromStorage = true;
-        } catch(e) {
-          console.error("window.storage.list failed:", e);
-        }
-      }
-      
-      if (keys.length === 0) {
+      const cloudKeys = await getCloudKeys(prefix);
+      if (cloudKeys !== null) {
+        keys = cloudKeys;
+        fromCloud = true;
+      } else {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k.startsWith('contacts:')) {
+          if (k.startsWith(prefix)) {
             keys.push(k);
           }
         }
-        fromStorage = false;
       }
 
       if(keys.length === 0){
@@ -843,9 +948,8 @@
       for(const k of keys){
         try{
           let val = null;
-          if (fromStorage && window.storage) {
-            const r = await window.storage.get(k, true);
-            val = r && r.value ? JSON.parse(r.value) : null;
+          if (fromCloud) {
+            val = await getCloudValue(k);
           } else {
             const rawVal = localStorage.getItem(k);
             val = rawVal ? JSON.parse(rawVal) : null;
@@ -864,12 +968,24 @@
         <div class="contact-entry" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line);">
           <div class="contact-info" style="flex: 1; padding-right: 12px;">
             <div class="ce-name" style="font-weight: 600; color: var(--navy-deep); font-size: 14px;">${escapeHtml(en.name||'—')}</div>
-            <div class="ce-meta" style="color: var(--ink-soft); font-family: var(--font-mono); font-size: 12px; margin-top: 2px;">
-              ${escapeHtml(en.phone||'')}
-              ${en.email ? ' · ' + escapeHtml(en.email) : ''}
-              ${en.company ? ' · ' + escapeHtml(en.company) : ''}
+            <div class="ce-details" style="margin-left: 16px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+              ${en.phone ? `
+              <div class="ce-detail-item" style="color: var(--ink-soft); font-family: var(--font-mono); font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; opacity: 0.7;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                ${escapeHtml(en.phone)}
+              </div>` : ''}
+              ${en.email ? `
+              <div class="ce-detail-item" style="color: var(--ink-soft); font-family: var(--font-mono); font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; opacity: 0.7;"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+                ${escapeHtml(en.email)}
+              </div>` : ''}
+              ${en.company ? `
+              <div class="ce-detail-item" style="color: var(--ink-soft); font-family: var(--font-body); font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; opacity: 0.7;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                ${escapeHtml(en.company)}
+              </div>` : ''}
+              <div style="font-size: 10px; color: var(--ink-soft); opacity: 0.7; margin-top: 2px;">Shared on ${en.ts ? new Date(en.ts).toLocaleDateString() : ''}</div>
             </div>
-            <div style="font-size: 10px; color: var(--ink-soft); opacity: 0.8; margin-top: 4px;">Shared on ${en.ts ? new Date(en.ts).toLocaleDateString() : ''}</div>
           </div>
           <div class="contact-actions" style="display: flex; gap: 8px; flex-shrink: 0;">
             <button class="btn btn-entry-save" data-index="${entries.indexOf(en)}" style="padding: 6px; border-radius: 8px; background: var(--navy-deep); color: white; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; cursor: pointer; transition: transform 0.15s ease;" title="Save Contact">
@@ -961,21 +1077,12 @@
   async function deleteContact(key) {
     if (!confirm("Are you sure you want to delete this contact?")) return;
     
-    let deleted = false;
-    if (window.storage && typeof window.storage.delete === 'function') {
-      try {
-        await window.storage.delete(key);
-        deleted = true;
-      } catch(e) { console.error(e); }
-    }
+    await deleteFromCloud(key);
     try {
       localStorage.removeItem(key);
-      deleted = true;
     } catch(e) { console.error(e); }
     
-    if (deleted) {
-      loadContacts();
-    }
+    loadContacts();
   }
 
   async function deleteAllContacts(keys) {
@@ -986,9 +1093,7 @@
     if (!confirm("Are you sure you want to delete ALL contacts? This cannot be undone.")) return;
     
     for (const key of keys) {
-      if (window.storage && typeof window.storage.delete === 'function') {
-        try { await window.storage.delete(key); } catch(e) { console.error(e); }
-      }
+      await deleteFromCloud(key);
       try { localStorage.removeItem(key); } catch(e) { console.error(e); }
     }
     
