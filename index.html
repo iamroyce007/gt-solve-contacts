@@ -416,16 +416,33 @@
     "END:VCARD"
   ].join("\n");
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
-    const blob = new Blob([vcard], {type:"text/vcard"});
+  function openVcard(vcardContent, filename) {
+    const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = "Durairasa_Matheeswaran_GTSolve.vcf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    
+    // Check if the user is on mobile (iOS or Android)
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Direct navigation triggers the native Contacts app import preview on mobile
+      window.location.href = url;
+    } else {
+      // Desktop: trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    openVcard(vcard, "Durairasa_Matheeswaran_GTSolve.vcf");
   });
 
   // ---------- QR Code (self-referencing) ----------
@@ -576,16 +593,8 @@
         "END:VCARD"
       ].filter(line => line !== "").join("\n");
 
-      // Download visitor's vCard
-      const blob = new Blob([visitorVcard], {type:"text/vcard"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${name.replace(/\s+/g, '_')}_contact.vcf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Download or redirect to visitor's vCard
+      openVcard(visitorVcard, `${name.replace(/\s+/g, '_')}_contact.vcf`);
 
       formState.style.display = 'none';
       successState.classList.add('show');
