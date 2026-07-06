@@ -374,9 +374,10 @@
         </button>
       </div>
 
-      <!-- iOS Save Helper -->
-      <div id="iosSaveNote" style="display: none; margin-top: 10px; font-size: 11px; color: var(--ink-soft); text-align: center; line-height: 1.4; padding: 10px; background: rgba(242,121,29,0.08); border-radius: 10px; border-left: 3px solid var(--orange);">
-        ℹ️ <b>On iPhone?</b> Tapping "Save Contact" will open a preview. Scroll to the bottom and select <b>Create New Contact</b>. Do not tap <i>Done</i> (at the top left), as it will close without saving.
+      <!-- Mobile Save Helper -->
+      <div id="mobileSaveNote" style="display: none; margin-top: 10px; font-size: 11px; color: var(--ink-soft); text-align: center; line-height: 1.4; padding: 10px; background: rgba(242,121,29,0.08); border-radius: 10px; border-left: 3px solid var(--orange);">
+        <span id="iosNoteText" style="display: none;">ℹ️ <b>On iPhone?</b> Tapping "Save Contact" will open a preview. Scroll to the bottom and select <b>Create New Contact</b>. Do not tap <i>Done</i> (at the top left), as it will close without saving.</span>
+        <span id="androidNoteText" style="display: none;">ℹ️ <b>On Android?</b> If the Contacts app doesn't open automatically, look for the downloaded <code>.vcf</code> file in your notifications or downloads folder and tap it to save.</span>
       </div>
     </div>
   </div>
@@ -488,16 +489,18 @@
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     const isMobile = isAndroid || isIOS;
-    const vcfFile = new File([vcardContent], filename, { type: 'text/vcard' });
 
     // 1. Web Share API — opens native share sheet, user picks Contacts app
-    if (isMobile && navigator.canShare && navigator.canShare({ files: [vcfFile] })) {
+    if (isMobile && navigator.share) {
       try {
-        await navigator.share({
-          files: [vcfFile],
-          title: contactObj ? contactObj.name : 'Contact Card',
-        });
-        return;
+        const vcfFile = new File([vcardContent], filename, { type: 'text/x-vcard' });
+        if (navigator.canShare && navigator.canShare({ files: [vcfFile] })) {
+          await navigator.share({
+            files: [vcfFile],
+            title: contactObj ? contactObj.name : 'Contact Card',
+          });
+          return;
+        }
       } catch (err) {
         if (err.name === 'AbortError') return; // User cancelled
         console.warn('Web Share failed, trying fallback:', err);
@@ -877,13 +880,22 @@
   });
   pinInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') pinSubmit.click(); });
 
-  // ---------- iOS Detection & Helper Note display ----------
-  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    const saveNote = document.getElementById('iosSaveNote');
+  // ---------- Mobile Detection & Helper Note display ----------
+  const isAndroidUser = /Android/i.test(navigator.userAgent);
+  const isIOSUser = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isAndroidUser || isIOSUser) {
+    const saveNote = document.getElementById('mobileSaveNote');
     if (saveNote) saveNote.style.display = 'block';
     
-    const shareNote = document.getElementById('iosShareNote');
-    if (shareNote) shareNote.style.display = 'block';
+    if (isIOSUser) {
+      const iosText = document.getElementById('iosNoteText');
+      if (iosText) iosText.style.display = 'inline';
+      const shareNote = document.getElementById('iosShareNote');
+      if (shareNote) shareNote.style.display = 'block';
+    } else if (isAndroidUser) {
+      const androidText = document.getElementById('androidNoteText');
+      if (androidText) androidText.style.display = 'inline';
+    }
   }
 </script>
 
