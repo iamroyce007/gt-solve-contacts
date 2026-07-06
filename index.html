@@ -385,7 +385,7 @@
     <div class="qr-box" id="qrBox"></div>
     <div class="qr-copy">
       <h3>Scan to open this card</h3>
-      <p>This QR points to this page. Anyone who scans it can save Durai's contact instantly, or tap "Share Your Contact" to send theirs back.</p>
+      <p>This QR points to this page. Anyone who scans it can save <span id="qrOwnerName">Durai</span>'s contact instantly, or tap "Share Your Contact" to send theirs back.</p>
     </div>
   </div>
 
@@ -553,9 +553,10 @@
   emailAnchor.href = `mailto:${activePerson.email}`;
   emailAnchor.textContent = activePerson.email;
 
-  // Update share modal labels
+  // Update share modal and QR labels
   document.getElementById('modalOwnerNameSub').textContent = activePerson.shortName;
   document.getElementById('modalOwnerName').textContent = activePerson.shortName;
+  document.getElementById('qrOwnerName').textContent = activePerson.shortName;
 
   // ---------- Cloud Database Configuration (kvdb.io) ----------
   // Dedicated verified bucket for GT Solve. Please verify the registration at durai@globaltechsolve.com to enable!
