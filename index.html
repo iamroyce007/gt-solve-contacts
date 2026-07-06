@@ -484,64 +484,61 @@
     "END:VCARD"
   ].join("\n");
 
-  function openVcard(vcardContent, filename, contactObj) {
+  async function openVcard(vcardContent, filename, contactObj) {
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    if (isAndroid && contactObj) {
-      // Build Android Intent to open Contacts App directly to "Create New Contact"
-      const name = encodeURIComponent(contactObj.name || '');
-      const phone = encodeURIComponent(contactObj.phone || '');
-      const email = encodeURIComponent(contactObj.email || '');
-      const company = encodeURIComponent(contactObj.company || '');
-      const title = encodeURIComponent(contactObj.title || '');
-      
-      let intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/contact;S.name=${name};S.phone=${phone};S.email=${email};S.company=${company};S.job_title=${title};end`;
-      
-      window.location.href = intentUrl;
-      
-      // Fallback: If intent isn't supported and page doesn't unload, download .vcf after 1.5s
-      setTimeout(() => {
-        const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-      }, 1500);
-    } else {
-      const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
-      const url = URL.createObjectURL(blob);
-      
-      if (isIOS) {
-        // Direct navigation triggers the native Contacts app import preview on iOS Safari
-        window.location.href = url;
-      } else {
-        // Desktop / fallback: trigger download
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+    const isMobile = isAndroid || isIOS;
+    const vcfFile = new File([vcardContent], filename, { type: 'text/vcard' });
+
+    // 1. Web Share API — opens native share sheet, user picks Contacts app
+    if (isMobile && navigator.canShare && navigator.canShare({ files: [vcfFile] })) {
+      try {
+        await navigator.share({
+          files: [vcfFile],
+          title: contactObj ? contactObj.name : 'Contact Card',
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return; // User cancelled
+        console.warn('Web Share failed, trying fallback:', err);
       }
-      
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 60000);
     }
+
+    // 2. Android Intent fallback
+    if (isAndroid && contactObj) {
+      const n = encodeURIComponent(contactObj.name || '');
+      const p = encodeURIComponent(contactObj.phone || '');
+      const e = encodeURIComponent(contactObj.email || '');
+      const c = encodeURIComponent(contactObj.company || '');
+      const t = encodeURIComponent(contactObj.title || '');
+      window.location.href = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/contact;S.name=${n};S.phone=${p};S.email=${e};S.company=${c};S.job_title=${t};end`;
+      return;
+    }
+
+    // 3. iOS: navigate to blob URL (Safari native contact preview)
+    const blob = new Blob([vcardContent], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    if (isIOS) {
+      window.location.href = url;
+    } else {
+      // 4. Desktop: trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   document.getElementById('saveBtn').addEventListener('click', () => {
-    openVcard(vcard, "Durairasa_Matheeswaran_GTSolve.vcf", {
-      name: "Durairasa Matheeswaran",
-      phone: "+91 99628 78786",
-      email: "durai@globaltechsolve.com",
-      company: "GT Solve",
-      title: "Founder & CEO"
+    openVcard(vcard, 'Durairasa_Matheeswaran_GTSolve.vcf', {
+      name: 'Durairasa Matheeswaran',
+      phone: '+91 99628 78786',
+      email: 'durai@globaltechsolve.com',
+      company: 'GT Solve',
+      title: 'Founder & CEO'
     });
   });
 
