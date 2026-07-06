@@ -359,6 +359,16 @@
     <div id="formState">
       <h2>Share your contact</h2>
       <p class="sub">Send your details to Durai's address book.</p>
+
+      <!-- vCard File Upload Integration -->
+      <div class="field" style="margin-bottom: 20px; padding: 14px; background: var(--paper); border: 2px dashed var(--line); border-radius: 12px; text-align: center; position: relative;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" style="width: 24px; height: 24px; margin: 0 auto 6px; display: block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        <div style="font-size: 12px; font-weight: 600; color: var(--navy-deep); margin-bottom: 4px;">Upload Contact vCard (.vcf)</div>
+        <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 8px;">Export from your phone and upload here to auto-fill</div>
+        <button class="btn" type="button" style="padding: 6px 12px; font-size: 11px; border-radius: 8px; background: var(--white); border: 1.5px solid var(--line); color: var(--navy-deep); margin: 0 auto; width: auto; font-family: var(--font-body); display: inline-flex;" onclick="document.getElementById('vcfInput').click()">Choose File</button>
+        <input type="file" id="vcfInput" accept=".vcf,.vcard" style="display: none;" />
+      </div>
+
       <div class="field">
         <label>Full name</label>
         <input type="text" id="inName" placeholder="Your name"/>
@@ -450,6 +460,68 @@
   document.getElementById('closeModal').addEventListener('click', closeModal);
   document.getElementById('cancelBtn').addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+
+  // ---------- vCard File Upload Parser ----------
+  document.getElementById('vcfInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const text = event.target.result;
+      const parsed = parseVCard(text);
+      
+      if (parsed.name) document.getElementById('inName').value = parsed.name;
+      if (parsed.phone) document.getElementById('inPhone').value = parsed.phone;
+      if (parsed.email) document.getElementById('inEmail').value = parsed.email;
+      if (parsed.company) document.getElementById('inCompany').value = parsed.company;
+      
+      e.target.value = '';
+    };
+    reader.onerror = function() {
+      alert("Error reading vCard file");
+    };
+    reader.readAsText(file);
+  });
+
+  function parseVCard(vcardText) {
+    const lines = vcardText.split(/\r?\n/);
+    const result = { name: '', phone: '', email: '', company: '' };
+    
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) continue;
+      
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+      
+      const keyPart = line.substring(0, colonIdx).trim().toUpperCase();
+      const valPart = line.substring(colonIdx + 1).trim();
+      
+      const keyFields = keyPart.split(';');
+      const primaryKey = keyFields[0];
+      
+      if (primaryKey === 'FN') {
+        result.name = valPart;
+      } else if (!result.name && primaryKey === 'N') {
+        const parts = valPart.split(';').map(p => p.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+          result.name = `${parts[1]} ${parts[0]}`.trim();
+        } else if (parts.length === 1) {
+          result.name = parts[0];
+        }
+      } else if (primaryKey === 'TEL') {
+        if (!result.phone || keyFields.includes('CELL') || keyFields.includes('PREF') || keyPart.includes('CELL') || keyPart.includes('PREF')) {
+          result.phone = valPart;
+        }
+      } else if (primaryKey === 'EMAIL') {
+        result.email = valPart;
+      } else if (primaryKey === 'ORG') {
+        result.company = valPart.split(';')[0].trim();
+      }
+    }
+    return result;
+  }
 
   document.getElementById('submitBtn').addEventListener('click', async () => {
     const name = document.getElementById('inName').value.trim();
