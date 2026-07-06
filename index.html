@@ -134,7 +134,53 @@
     gap:14px;
     margin-top:26px;
   }
-  @media (max-width:480px){ .actions{grid-template-columns:1fr;} }
+  
+  /* ---------- MOBILE COMPATIBILITY & OPTIMIZATIONS ---------- */
+  .tel-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .tel-links .sep {
+    color: var(--ink-soft);
+    opacity: 0.5;
+  }
+
+  @media (max-width:480px){
+    .wrap {
+      padding: 16px 12px 60px;
+    }
+    .actions{grid-template-columns:1fr;}
+    .name-block h1 {
+      font-size: 23px;
+    }
+    .tel-links {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .tel-links .sep {
+      display: none;
+    }
+    .qr-section {
+      flex-direction: column;
+      text-align: center;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 16px;
+    }
+    .modal {
+      padding: 20px 16px;
+      max-width: 95%;
+    }
+    .card-right {
+      padding: 28px 20px;
+    }
+    .card-left {
+      padding: 28px 20px;
+    }
+  }
 
   .btn{
     border:none;
@@ -295,9 +341,13 @@
       </div>
 
       <div class="info-list">
-        <div class="info-row">
+        <div class="info-row tel-row">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
-          <a href="tel:+919962878786">+91 99628 78786</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="tel:+919894254405">+91 98942 54405</a>
+          <div class="tel-links">
+            <a href="tel:+919962878786">+91 99628 78786</a>
+            <span class="sep">|</span>
+            <a href="tel:+919894254405">+91 98942 54405</a>
+          </div>
         </div>
         <div class="info-row">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div>
