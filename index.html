@@ -394,14 +394,14 @@
   </div>
 
   <div class="book-panel" id="bookPanel">
-    <h3>Address Book — contacts shared via this card</h3>
-    <div id="pinGate" class="pin-gate">
-      <input type="password" id="pinInput" placeholder="Enter access PIN"/>
-      <button id="pinSubmit">Unlock</button>
+    <div class="book-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid var(--line); padding-bottom: 10px;">
+      <h3 style="margin: 0; font-family: var(--font-display); font-size: 15px; color: var(--navy-deep);">Address Book</h3>
+      <div class="book-global-actions" style="display: flex; gap: 8px;">
+        <button id="btnSaveAll" class="btn" style="padding: 6px 12px; font-size: 11px; border-radius: 8px; background: var(--navy-deep); color: var(--white); font-family: var(--font-body); font-weight: 600; cursor: pointer;">Save All</button>
+        <button id="btnDeleteAll" class="btn" style="padding: 6px 12px; font-size: 11px; border-radius: 8px; background: #c0392b; color: var(--white); font-family: var(--font-body); font-weight: 600; cursor: pointer;">Delete All</button>
+      </div>
     </div>
-    <div id="pinWrongNote" style="display:none; color:#c0392b; font-size:12.5px; margin-top:8px;">Incorrect PIN. Try again.</div>
-    <div id="bookList" style="display:none; margin-top:6px;"></div>
-    <p class="pin-note">This gate is a light deterrent, not real security — anyone with this page's link can technically view submissions. Default PIN is <b>4405</b> (change it in the code).</p>
+    <div id="bookList"></div>
   </div>
 
 </div>
@@ -792,18 +792,19 @@
     }
   });
 
-  // ---------- Address Book (PIN-gated) ----------
-  const ACCESS_PIN = "4405"; // change this to whatever you like
+  // ---------- Address Book ----------
   const bookToggleBtn = document.getElementById('bookToggleBtn');
   const bookPanel = document.getElementById('bookPanel');
-  const pinGate = document.getElementById('pinGate');
-  const pinInput = document.getElementById('pinInput');
-  const pinSubmit = document.getElementById('pinSubmit');
-  const pinWrongNote = document.getElementById('pinWrongNote');
   const bookList = document.getElementById('bookList');
+
+  let currentEntries = [];
+  let currentKeys = [];
 
   bookToggleBtn.addEventListener('click', () => {
     bookPanel.classList.toggle('open');
+    if (bookPanel.classList.contains('open')) {
+      loadContacts();
+    }
   });
 
   async function loadContacts(){
@@ -834,51 +835,177 @@
 
       if(keys.length === 0){
         bookList.innerHTML = '<p class="empty-note">No contacts shared yet.</p>';
+        currentEntries = [];
+        currentKeys = [];
         return;
       }
       const entries = [];
       for(const k of keys){
         try{
+          let val = null;
           if (fromStorage && window.storage) {
             const r = await window.storage.get(k, true);
-            if(r && r.value){ entries.push(JSON.parse(r.value)); }
+            val = r && r.value ? JSON.parse(r.value) : null;
           } else {
-            const val = localStorage.getItem(k);
-            if(val){ entries.push(JSON.parse(val)); }
+            const rawVal = localStorage.getItem(k);
+            val = rawVal ? JSON.parse(rawVal) : null;
+          }
+          if (val) {
+            val.key = k;
+            entries.push(val);
           }
         }catch(e){ /* skip unreadable entry */ }
       }
       entries.sort((a,b) => (b.ts||0) - (a.ts||0));
+      currentEntries = entries;
+      currentKeys = entries.map(e => e.key);
+
       bookList.innerHTML = entries.map(en => `
-        <div class="contact-entry">
-          <div>
-            <div class="ce-name">${escapeHtml(en.name||'—')}</div>
-            <div class="ce-meta">${escapeHtml(en.phone||'')}${en.email ? ' · ' + escapeHtml(en.email) : ''}${en.company ? ' · ' + escapeHtml(en.company) : ''}</div>
+        <div class="contact-entry" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line);">
+          <div class="contact-info" style="flex: 1; padding-right: 12px;">
+            <div class="ce-name" style="font-weight: 600; color: var(--navy-deep); font-size: 14px;">${escapeHtml(en.name||'—')}</div>
+            <div class="ce-meta" style="color: var(--ink-soft); font-family: var(--font-mono); font-size: 12px; margin-top: 2px;">
+              ${escapeHtml(en.phone||'')}
+              ${en.email ? ' · ' + escapeHtml(en.email) : ''}
+              ${en.company ? ' · ' + escapeHtml(en.company) : ''}
+            </div>
+            <div style="font-size: 10px; color: var(--ink-soft); opacity: 0.8; margin-top: 4px;">Shared on ${en.ts ? new Date(en.ts).toLocaleDateString() : ''}</div>
           </div>
-          <div class="ce-meta">${en.ts ? new Date(en.ts).toLocaleDateString() : ''}</div>
+          <div class="contact-actions" style="display: flex; gap: 8px; flex-shrink: 0;">
+            <button class="btn btn-entry-save" data-index="${entries.indexOf(en)}" style="padding: 6px; border-radius: 8px; background: var(--navy-deep); color: white; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; cursor: pointer; transition: transform 0.15s ease;" title="Save Contact">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="btn btn-entry-delete" data-key="${en.key}" style="padding: 6px; border-radius: 8px; background: #c0392b; color: white; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; cursor: pointer; transition: transform 0.15s ease;" title="Delete Contact">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+          </div>
         </div>
       `).join('');
+
+      document.querySelectorAll('.btn-entry-save').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+          saveEntryContact(currentEntries[idx]);
+        });
+      });
+
+      document.querySelectorAll('.btn-entry-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const key = e.currentTarget.getAttribute('data-key');
+          deleteContact(key);
+        });
+      });
+
     }catch(err){
       console.error("Load error:", err);
       bookList.innerHTML = '<p class="empty-note">Couldn\'t load the address book right now.</p>';
     }
   }
 
+  function saveEntryContact(entry) {
+    const nameParts = entry.name.split(' ');
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : entry.name;
+    const vcardContent = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `N:${lastName};${firstName};;;`,
+      `FN:${entry.name}`,
+      entry.company ? `ORG:${entry.company}` : "",
+      `TEL;TYPE=CELL:${entry.phone}`,
+      entry.email ? `EMAIL:${entry.email}` : "",
+      "END:VCARD"
+    ].filter(line => line !== "").join("\n");
+
+    openVcard(vcardContent, `${entry.name.replace(/\s+/g, '_')}_contact.vcf`, {
+      name: entry.name,
+      phone: entry.phone,
+      email: entry.email,
+      company: entry.company,
+      title: ""
+    });
+  }
+
+  async function downloadAllContacts(entries) {
+    if (entries.length === 0) {
+      alert("No contacts to download.");
+      return;
+    }
+    const allVcards = entries.map(entry => {
+      const nameParts = entry.name.split(' ');
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : entry.name;
+      return [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        `N:${lastName};${firstName};;;`,
+        `FN:${entry.name}`,
+        entry.company ? `ORG:${entry.company}` : "",
+        `TEL;TYPE=CELL:${entry.phone}`,
+        entry.email ? `EMAIL:${entry.email}` : "",
+        "END:VCARD"
+      ].filter(line => line !== "").join("\n");
+    }).join("\n");
+
+    const blob = new Blob([allVcards], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "all_shared_contacts.vcf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function deleteContact(key) {
+    if (!confirm("Are you sure you want to delete this contact?")) return;
+    
+    let deleted = false;
+    if (window.storage && typeof window.storage.delete === 'function') {
+      try {
+        await window.storage.delete(key);
+        deleted = true;
+      } catch(e) { console.error(e); }
+    }
+    try {
+      localStorage.removeItem(key);
+      deleted = true;
+    } catch(e) { console.error(e); }
+    
+    if (deleted) {
+      loadContacts();
+    }
+  }
+
+  async function deleteAllContacts(keys) {
+    if (keys.length === 0) {
+      alert("No contacts to delete.");
+      return;
+    }
+    if (!confirm("Are you sure you want to delete ALL contacts? This cannot be undone.")) return;
+    
+    for (const key of keys) {
+      if (window.storage && typeof window.storage.delete === 'function') {
+        try { await window.storage.delete(key); } catch(e) { console.error(e); }
+      }
+      try { localStorage.removeItem(key); } catch(e) { console.error(e); }
+    }
+    
+    loadContacts();
+  }
+
+  document.getElementById('btnSaveAll').addEventListener('click', () => {
+    downloadAllContacts(currentEntries);
+  });
+
+  document.getElementById('btnDeleteAll').addEventListener('click', () => {
+    deleteAllContacts(currentKeys);
+  });
+
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
-
-  pinSubmit.addEventListener('click', () => {
-    if(pinInput.value === ACCESS_PIN){
-      pinGate.style.display = 'none';
-      pinWrongNote.style.display = 'none';
-      bookList.style.display = 'block';
-      loadContacts();
-    } else {
-      pinWrongNote.style.display = 'block';
-    }
-  });
-  pinInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') pinSubmit.click(); });
 
   // ---------- iOS Detection & Helper Note display ----------
   if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
