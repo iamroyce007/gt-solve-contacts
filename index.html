@@ -499,6 +499,19 @@
       let intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/contact;S.name=${name};S.phone=${phone};S.email=${email};S.company=${company};S.job_title=${title};end`;
       
       window.location.href = intentUrl;
+      
+      // Fallback: If intent isn't supported and page doesn't unload, download .vcf after 1.5s
+      setTimeout(() => {
+        const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }, 1500);
     } else {
       const blob = new Blob([vcardContent], {type: "text/vcard;charset=utf-8"});
       const url = URL.createObjectURL(blob);
