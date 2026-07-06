@@ -573,7 +573,59 @@
   }
   function closeModal(){ overlay.classList.remove('open'); }
 
-  document.getElementById('shareBtn').addEventListener('click', openModal);
+  async function handleShareContact() {
+    const isPickerSupported = ('contacts' in navigator && 'ContactsManager' in window);
+    
+    if (isPickerSupported) {
+      try {
+        const props = ['name', 'tel', 'email'];
+        const contacts = await navigator.contacts.select(props, { multiple: false });
+        
+        if (contacts && contacts.length > 0) {
+          const contact = contacts[0];
+          const name = contact.name && contact.name.length > 0 ? contact.name[0] : '';
+          const phone = contact.tel && contact.tel.length > 0 ? contact.tel[0] : '';
+          const email = contact.email && contact.email.length > 0 ? contact.email[0] : '';
+          const company = '';
+          
+          if (!name || !phone) {
+            openModal();
+            if (name) document.getElementById('inName').value = name;
+            if (phone) document.getElementById('inPhone').value = phone;
+            if (email) document.getElementById('inEmail').value = email;
+            return;
+          }
+          
+          const entry = { name, phone, email, company, ts: Date.now() };
+          const key = `contacts:${entry.ts}_${Math.random().toString(36).slice(2,8)}`;
+          
+          let stored = false;
+          if (window.storage && typeof window.storage.set === 'function') {
+            try {
+              await window.storage.set(key, JSON.stringify(entry), true);
+              stored = true;
+            } catch(e) { console.error(e); }
+          }
+          try {
+            localStorage.setItem(key, JSON.stringify(entry));
+            stored = true;
+          } catch(e) { console.error(e); }
+          
+          overlay.classList.add('open');
+          formState.style.display = 'none';
+          successState.classList.add('show');
+          setTimeout(closeModal, 2200);
+        }
+      } catch (err) {
+        console.error('Contact Picker error:', err);
+        openModal();
+      }
+    } else {
+      openModal();
+    }
+  }
+
+  document.getElementById('shareBtn').addEventListener('click', handleShareContact);
   document.getElementById('closeModal').addEventListener('click', closeModal);
   document.getElementById('cancelBtn').addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
