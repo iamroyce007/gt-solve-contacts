@@ -410,6 +410,14 @@
       <h2>Share your contact</h2>
       <p class="sub">Send your details to Durai's address book.</p>
 
+      <!-- Contact Picker Integration -->
+      <div id="contactPickerContainer" style="display: none; margin-bottom: 14px;">
+        <button class="btn" type="button" id="btnImportContacts" style="background: var(--navy-deep); color: var(--white); font-size: 13px; width: 100%; border-radius: 12px; padding: 12px; font-family: var(--font-body); display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Select from Phone Contacts
+        </button>
+      </div>
+
       <!-- vCard File Upload Integration -->
       <div class="field" style="margin-bottom: 20px; padding: 14px; background: var(--paper); border: 2px dashed var(--line); border-radius: 12px; text-align: center; position: relative;">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" style="width: 24px; height: 24px; margin: 0 auto 6px; display: block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
@@ -607,6 +615,35 @@
       }
     }
     return result;
+  }
+
+  // ---------- Contact Picker API Integration ----------
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    const pickerContainer = document.getElementById('contactPickerContainer');
+    if (pickerContainer) {
+      pickerContainer.style.display = 'block';
+    }
+    
+    document.getElementById('btnImportContacts').addEventListener('click', async () => {
+      try {
+        const props = ['name', 'tel', 'email'];
+        const contacts = await navigator.contacts.select(props, { multiple: false });
+        if (contacts && contacts.length > 0) {
+          const contact = contacts[0];
+          if (contact.name && contact.name.length > 0) {
+            document.getElementById('inName').value = contact.name[0];
+          }
+          if (contact.tel && contact.tel.length > 0) {
+            document.getElementById('inPhone').value = contact.tel[0];
+          }
+          if (contact.email && contact.email.length > 0) {
+            document.getElementById('inEmail').value = contact.email[0];
+          }
+        }
+      } catch (err) {
+        console.error('Contact Picker error:', err);
+      }
+    });
   }
 
   document.getElementById('submitBtn').addEventListener('click', async () => {
