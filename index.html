@@ -373,6 +373,11 @@
           Share Your Contact
         </button>
       </div>
+
+      <!-- iOS Save Helper -->
+      <div id="iosSaveNote" style="display: none; margin-top: 10px; font-size: 11px; color: var(--ink-soft); text-align: center; line-height: 1.4; padding: 10px; background: rgba(242,121,29,0.08); border-radius: 10px; border-left: 3px solid var(--orange);">
+        ℹ️ <b>On iPhone?</b> Tapping "Save Contact" will open a preview. Scroll to the bottom and select <b>Create New Contact</b>. Do not tap <i>Done</i> (at the top left), as it will close without saving.
+      </div>
     </div>
   </div>
 
@@ -409,6 +414,11 @@
     <div id="formState">
       <h2>Share your contact</h2>
       <p class="sub">Send your details to Durai's address book.</p>
+
+      <!-- iOS Share Helper -->
+      <div id="iosShareNote" style="display: none; margin-bottom: 14px; font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; padding: 10px; background: rgba(10,31,61,0.04); border-radius: 10px; border-left: 3px solid var(--orange);">
+        💡 <b>On iPhone:</b> Apple prevents Safari from opening Contacts directly. Please enter your details below or export your contact card from the Contacts app and upload it.
+      </div>
 
       <!-- Contact Picker Integration -->
       <div id="contactPickerContainer" style="display: none; margin-bottom: 14px;">
@@ -804,6 +814,15 @@
     }
   });
   pinInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') pinSubmit.click(); });
+
+  // ---------- iOS Detection & Helper Note display ----------
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    const saveNote = document.getElementById('iosSaveNote');
+    if (saveNote) saveNote.style.display = 'block';
+    
+    const shareNote = document.getElementById('iosShareNote');
+    if (shareNote) shareNote.style.display = 'block';
+  }
 </script>
 
 </body>
