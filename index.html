@@ -466,8 +466,55 @@
     const key = `contacts:${entry.ts}_${Math.random().toString(36).slice(2,8)}`;
 
     try{
-      const result = await window.storage.set(key, JSON.stringify(entry), true);
-      if(!result){ throw new Error("Storage returned no result"); }
+      let stored = false;
+      if (window.storage && typeof window.storage.set === 'function') {
+        try {
+          const result = await window.storage.set(key, JSON.stringify(entry), true);
+          if (result) stored = true;
+        } catch(e) {
+          console.error("window.storage.set failed:", e);
+        }
+      }
+      
+      // Fallback/parallel store to localStorage
+      try {
+        localStorage.setItem(key, JSON.stringify(entry));
+        stored = true;
+      } catch(e) {
+        console.error("localStorage set failed:", e);
+      }
+
+      if (!stored) {
+        throw new Error("No storage mechanism available");
+      }
+
+      // Generate visitor's vCard
+      const nameParts = name.split(' ');
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : name;
+      
+      const visitorVcard = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        `N:${lastName};${firstName};;;`,
+        `FN:${name}`,
+        company ? `ORG:${company}` : "",
+        `TEL;TYPE=CELL:${phone}`,
+        email ? `EMAIL:${email}` : "",
+        "END:VCARD"
+      ].filter(line => line !== "").join("\n");
+
+      // Download visitor's vCard
+      const blob = new Blob([visitorVcard], {type:"text/vcard"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name.replace(/\s+/g, '_')}_contact.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       formState.style.display = 'none';
       successState.classList.add('show');
       setTimeout(closeModal, 1800);
@@ -494,8 +541,29 @@
   async function loadContacts(){
     bookList.innerHTML = '<p class="empty-note">Loading…</p>';
     try{
-      const listResult = await window.storage.list('contacts:', true);
-      const keys = (listResult && listResult.keys) ? listResult.keys : [];
+      let keys = [];
+      let fromStorage = false;
+      
+      if (window.storage && typeof window.storage.list === 'function') {
+        try {
+          const listResult = await window.storage.list('contacts:', true);
+          keys = (listResult && listResult.keys) ? listResult.keys : [];
+          if (keys.length > 0) fromStorage = true;
+        } catch(e) {
+          console.error("window.storage.list failed:", e);
+        }
+      }
+      
+      if (keys.length === 0) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k.startsWith('contacts:')) {
+            keys.push(k);
+          }
+        }
+        fromStorage = false;
+      }
+
       if(keys.length === 0){
         bookList.innerHTML = '<p class="empty-note">No contacts shared yet.</p>';
         return;
@@ -503,8 +571,13 @@
       const entries = [];
       for(const k of keys){
         try{
-          const r = await window.storage.get(k, true);
-          if(r && r.value){ entries.push(JSON.parse(r.value)); }
+          if (fromStorage && window.storage) {
+            const r = await window.storage.get(k, true);
+            if(r && r.value){ entries.push(JSON.parse(r.value)); }
+          } else {
+            const val = localStorage.getItem(k);
+            if(val){ entries.push(JSON.parse(val)); }
+          }
         }catch(e){ /* skip unreadable entry */ }
       }
       entries.sort((a,b) => (b.ts||0) - (a.ts||0));
